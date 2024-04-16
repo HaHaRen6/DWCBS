@@ -84,5 +84,5 @@ def save_map(map, starts, goals, filename):
 
 if __name__== '__main__':
     # Generates a random map and saves it to a file
-    map, starts, goals = random_map(10, 10, 5, 0.5)
-    save_map(map, starts, goals, 'img/output_map.txt')
+    map, starts, goals = random_map(10, 10, 5, 0.1)
+    save_map(map, starts, goals, 'img/output_map1.txt')

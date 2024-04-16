@@ -157,7 +157,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     open_list = []
     closed_list = dict()
     h_value = h_values[start_loc]
-    c_table = build_constraint_table(constraints, agent)
+    c_table = build_constraint_table(constraints, agent) # constraint table
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
     closed_list[(start_loc, 0)] = root

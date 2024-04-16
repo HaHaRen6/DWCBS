@@ -3,6 +3,7 @@ import argparse
 import glob
 from pathlib import Path
 from cbs import CBSSolver
+from cbs2 import CBSSolver2
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from random_instance import random_map, save_map, correct_random_map
@@ -11,6 +12,7 @@ from single_agent_planner import get_sum_of_cost
 import os
 import time as timer
 import random
+
 
 SOLVER = "CBS"
 
@@ -162,6 +164,10 @@ if __name__ == '__main__':
             if args.solver == "CBS":
                 print("***Run CBS***")
                 cbs = CBSSolver(my_map, starts, goals)
+                paths = cbs.find_solution(args.disjoint)
+            elif args.solver == "CBS2":
+                print("***Run CBS2***")
+                cbs = CBSSolver2(my_map, starts, goals)
                 paths = cbs.find_solution(args.disjoint)
             elif args.solver == "Independent":
                 print("***Run Independent***")

@@ -111,39 +111,6 @@ def standard_splitting(collision):
         })
     return constraints
 
-
-def disjoint_splitting(collision):
-    ##############################
-    # Task 4.1: Return a list of (two) constraints to resolve the given collision
-    #           Vertex collision: the first constraint enforces one agent to be at the specified location at the
-    #                            specified timestep, and the second constraint prevents the same agent to be at the
-    #                            same location at the timestep.
-    #           Edge collision: the first constraint enforces one agent to traverse the specified edge at the
-    #                          specified timestep, and the second constraint prevents the same agent to traverse the
-    #                          specified edge at the specified timestep
-    #           Choose the agent randomly
-    choice = random.randint(0, 1)
-    agents = [collision['a1'], collision['a2']]
-    agent = agents[choice]
-    loc = collision['loc'] if choice == 0 else list(reversed(collision['loc']))
-    return [
-        {
-            'agent': agent,
-            'loc': loc,
-            'timestep': collision['timestep'],
-            'positive': True,
-            'final': False
-        },
-        {
-            'agent': agent,
-            'loc': loc,
-            'timestep': collision['timestep'],
-            'positive': False,
-            'final': False
-        }
-    ]
-
-
 def paths_violate_constraint(constraint, paths):
     ##############################
     # Task 4.3: compute the list of agents that violates the positive constraints
@@ -173,7 +140,7 @@ def edge_check(constraint, paths):
 
 
 
-class CBSSolver(object):
+class CBSSolver2(object):
     """The high-level search of CBS."""
 
     def __init__(self, my_map, starts, goals, max_time=None):
@@ -271,7 +238,7 @@ class CBSSolver(object):
             # collision = p['collisions'][0]
             collision = min(p['collisions'], key=lambda x: x['timestep'])
             # 4.2 Adjusting the High-Level Search
-            constraints = disjoint_splitting(collision) if disjoint else standard_splitting(collision)
+            constraints = standard_splitting(collision)
             # HERE
             # st()
             for c in constraints:

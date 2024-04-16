@@ -51,15 +51,14 @@ class PrioritizedPlanningSolver(object):
 
             for time, loc in enumerate(path):
                 # create a new constraint whith the current path location for all agents except the current one
-                for a in range(self.num_of_agents):
-                    if a != i:
+                    for a in range(i+1, self.num_of_agents):
                         # vertex constraint
                         # if this is the last location in the path, we add a final constraint
                         constraints.append({
                             'agent': a,
                             'loc': [loc],
                             'timestep': time,
-                            'final': time == len(path) - 1
+                            'final': time == len(path) -  1
                         })
                         # edge constraint
                         # the agent can't be at the last position to add an edge constraint
@@ -74,9 +73,9 @@ class PrioritizedPlanningSolver(object):
                             })
 
         self.CPU_time = timer.time() - start_time
-
         print("\n Found a solution! \n")
         print("CPU time (s):    {:.2f}".format(self.CPU_time))
         print("Sum of costs:    {}".format(get_sum_of_cost(result)))
+        # print(constraints)
         print(result)
         return result
