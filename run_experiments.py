@@ -3,7 +3,7 @@ import argparse
 import glob
 from pathlib import Path
 from cbs import CBSSolver
-from cbs2 import CBSSolver2
+from wcbs import WCBSSolver
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from random_instance import random_map, save_map, correct_random_map
@@ -165,10 +165,10 @@ if __name__ == '__main__':
                 print("***Run CBS***")
                 cbs = CBSSolver(my_map, starts, goals)
                 paths = cbs.find_solution(args.disjoint)
-            elif args.solver == "CBS2":
-                print("***Run CBS2***")
-                cbs = CBSSolver2(my_map, starts, goals)
-                paths = cbs.find_solution(args.disjoint)
+            elif args.solver == "WCBS":
+                print("***Run WCBS***")
+                cbs = WCBSSolver(my_map, starts, goals)
+                paths = cbs.find_solution()
             elif args.solver == "Independent":
                 print("***Run Independent***")
                 solver = IndependentSolver(my_map, starts, goals)

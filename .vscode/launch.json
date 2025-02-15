@@ -5,16 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python 调试程序: 包含参数的当前文件",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "args": [
-                "${command:pickArgs}"
-            ]
-        },
-        {
             "name": "Run CBS",
             "type": "python",
             "request": "launch",
@@ -38,6 +28,21 @@
             "args": [
                 "--instance", "instances/exp0.txt",
                 "--solver", "Prioritized"
+            ],
+            "python": "/home/haharen/miniconda3/envs/mapf/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Run WCBS",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_experiments.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance", "instances/exp_hhr_1.txt",
+                "--solver", "WCBS"
             ],
             "python": "/home/haharen/miniconda3/envs/mapf/bin/python",
             "env": {

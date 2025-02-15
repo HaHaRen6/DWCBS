@@ -109,7 +109,7 @@ class Animation:
                 d2 = agents_array[j]
                 pos1 = np.array(d1.center)
                 pos2 = np.array(d2.center)
-                if np.linalg.norm(pos1 - pos2) < 0.7:
+                if np.linalg.norm(pos1 - pos2) < 0.2:
                     d1.set_facecolor('red')
                     d2.set_facecolor('red')
                     print("COLLISION! (agent-agent) ({}, {}) at time {}".format(i, j, t/10))

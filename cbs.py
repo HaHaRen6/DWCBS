@@ -20,8 +20,7 @@ def normalize_paths(pathA, pathB):
     # st()
     return path1, path2
 
-
-def detect_collision(pathA, pathB, time_start=None, time_end=None):
+def detect_collision(pathA, pathB):
     ##############################
     # Task 3.1: Return the first collision that occurs between two robot paths (or None if there is no collision)
     #           There are two types of collisions: vertex collision and edge collision.
@@ -48,7 +47,7 @@ def detect_collision(pathA, pathB, time_start=None, time_end=None):
     return None
 
 
-def detect_collisions(paths, time_start=None, time_end=None):
+def detect_collisions(paths):
     ##############################
     # Task 3.1: Return a list of first collisions between all robot pairs.
     #           A collision can be represented as dictionary that contains the id of the two robots, the vertex or edge
@@ -58,7 +57,7 @@ def detect_collisions(paths, time_start=None, time_end=None):
     # i and j are agents
     for i in range(len(paths)):
         for j in range(i + 1, len(paths)):
-            coll_data = detect_collision(paths[i], paths[j], time_start, time_end)
+            coll_data = detect_collision(paths[i], paths[j])
             # if coll_data is not None (collision detected)
             if coll_data:
                 collisions.append({

@@ -5,11 +5,10 @@ from single_agent_planner import compute_heuristics, a_star, get_location, get_s
 from ipdb import set_trace as st 
 
 DEBUG = True
-
+window_size = 5
 
 def normalize_paths(pathA, pathB):
     """
-    given path1 and path2, finds the shortest path and pads it with the last location
     扩展短的路径，使得两个路径长度相等
     """
     path1 = pathA.copy()
@@ -17,28 +16,31 @@ def normalize_paths(pathA, pathB):
     shortest, pad = (path1, len(path2) - len(path1)) if len(path1) < len(path2) else (path2, len(path1) - len(path2))
     for _ in range(pad):
         shortest.append(shortest[-1])
-    # st()
     return path1, path2
 
-
-def detect_collision(pathA, pathB, time_start=None, time_end=None):
+def detect_collision(pathA, pathB, time_window=(None, None)):
     ##############################
     # Task 3.1: Return the first collision that occurs between two robot paths (or None if there is no collision)
     #           There are two types of collisions: vertex collision and edge collision.
     #           A vertex collision occurs if both robots occupy the same location at the same timestep
     #           An edge collision occurs if the robots swap their location at the same timestep.
     #           You should use "get_location(path, t)" to get the location of a robot at time t.
-    # this function detects if an agent collides with another even after one of the two reached the goal
+    # 
+    # 用于检测一个智能体是否与另一个智能体发生碰撞，即使其中一方已达成目标。
+    
     path1, path2 = normalize_paths(pathA, pathB)
     length = len(path1)
-    for t in range(length):
+    (time_start, time_end) = time_window
+    time_start = time_start if time_start is not None else 0
+    time_end = time_end if time_end is not None else length
+    for t in range(time_start, time_end):
         # check for vertex collision
         pos1 = get_location(path1, t)
         pos2 = get_location(path2, t)
         if pos1 == pos2:
-            # we return the vertex and the timestep causing the collision
+            # return the vertex and the timestep causing the collision
             return [pos1], t, 'vertex'
-        # check for edge collision (not if we are in the last timestep)
+        # check for edge collision (edge collision 不会发生在最后一步，为啥...)
         if t < length - 1:
             next_pos1 = get_location(path1, t + 1)
             next_pos2 = get_location(path2, t + 1)
@@ -47,31 +49,30 @@ def detect_collision(pathA, pathB, time_start=None, time_end=None):
                 return [pos1, next_pos1], t + 1, 'edge'
     return None
 
-
-def detect_collisions(paths, time_start=None, time_end=None):
+def detect_collisions(paths, time_window=(None, None)):
     ##############################
     # Task 3.1: Return a list of first collisions between all robot pairs.
     #           A collision can be represented as dictionary that contains the id of the two robots, the vertex or edge
     #           causing the collision, and the timestep at which the collision occurred.
     #           You should use your detect_collision function to find a collision between two robots.
+    
     collisions = []
     # i and j are agents
     for i in range(len(paths)):
         for j in range(i + 1, len(paths)):
-            coll_data = detect_collision(paths[i], paths[j], time_start, time_end)
-            # if coll_data is not None (collision detected)
-            if coll_data:
+            data = detect_collision(paths[i], paths[j], time_window)
+            # if data is not None (collision detected)
+            if data:
                 collisions.append({
                     'a1': i,
                     'a2': j,
-                    'loc': coll_data[0],  # vertex or edge
-                    'timestep': coll_data[1],  # timestep
-                    'type': coll_data[2]
+                    'loc': data[0],  # vertex or edge
+                    'timestep': data[1],  # timestep
+                    'type': data[2]
                 })
     return collisions
 
-
-def standard_splitting(collision):
+def standard_splitting(collision, time_window=None):
     ##############################
     # Task 3.2: Return a list of (two) constraints to resolve the given collision
     #           Vertex collision: the first constraint prevents the first agent to be at the specified location at the
@@ -80,71 +81,66 @@ def standard_splitting(collision):
     #           Edge collision: the first constraint prevents the first agent to traverse the specified edge at the
     #                          specified timestep, and the second constraint prevents the second agent to traverse the
     #                          specified edge at the specified timestep
-    # in this case, we can ignore final as all the paths are normalized
+    #
+    # 忽略final参数（normalize_paths()函数已解决）
+    
     constraints = []
     if collision['type'] == 'vertex':
         constraints.append({
             'agent': collision['a1'],
             'loc': collision['loc'],
             'timestep': collision['timestep'],
-            'final': False
+            'final': False,
+            'time_window': time_window
         })
         constraints.append({
             'agent': collision['a2'],
             'loc': collision['loc'],
             'timestep': collision['timestep'],
-            'final': False
+            'final': False,
+            'time_window': time_window
         })
     elif collision['type'] == 'edge':
         constraints.append({
             'agent': collision['a1'],
             'loc': collision['loc'],
             'timestep': collision['timestep'],
-            'final': False
+            'final': False,
+            'time_window': time_window
         })
         constraints.append({
             'agent': collision['a2'],
-            # revesred returns an iterator. In python list == iterator returns false, not an error: nasty bug
             'loc': list(reversed(collision['loc'])),
             'timestep': collision['timestep'],
-            'final': False
+            'final': False,
+            'time_window': time_window
         })
     return constraints
 
-def paths_violate_constraint(constraint, paths):
-    ##############################
-    # Task 4.3: compute the list of agents that violates the positive constraints
-    # constraint:{'agent': 0, 'loc': [(2, 4)], 'timestep': 3, 'final': False, 'positive': False}
-    # paths:[[(2, 1), ... (3, 4), (3, 5)], [(1, 2), ..., (4, 4)]]
+def longest_common_prefix(list1, list2):
+    # 处理空列表的情况
+    if not list1 or not list2:
+        return []
+    min_len = min(len(list1), len(list2))
+    # prefix = []
+    prefix_len = 0
+    for i in range(min_len):
+        if list1[i] == list2[i]:
+            # prefix.append(list1[i])
+            prefix_len += 1
+        else:
+            break  # 遇到不同元素时终止循环
+    return prefix_len
 
-    agents_violate = []
-    if len(constraint['loc']) == 1:
-        return vertex_check(constraint, paths)
-    else:
-        return edge_check(constraint, paths)
+def shift_window(time_window, shift1, shift2):
+    return (time_window[0] + shift1, time_window[1] + shift2)
 
-def vertex_check(constraint, paths):
-    agents_violate = []
-    for agent in range(len(paths)):
-        if constraint['loc'][0] == get_location(paths[agent], constraint['timestep']):
-            agents_violate.append(agent)
-    return agents_violate
-
-def edge_check(constraint, paths):
-    agents_violate = []
-    for agent in range(len(paths)):
-        loc = [get_location(paths[agent], constraint['timestep'] - 1), get_location(paths[agent], constraint['timestep'])]
-        if loc == constraint['loc'] or constraint['loc'][0] == loc[0] or constraint['loc'][1] == loc[1]:
-            agents_violate.append(agent)
-    return agents_violate
-
-
-
-class CBSSolver2(object):
+class WCBSSolver(object):
     """The high-level search of CBS."""
 
     def __init__(self, my_map, starts, goals, max_time=None):
-        """my_map   - list of lists specifying obstacle positions
+        """
+        my_map   - list of lists specifying obstacle positions
         starts      - [(x1, y1), (x2, y2), ...] list of start locations
         goals       - [(x1, y1), (x2, y2), ...] list of goal locations
         """
@@ -181,10 +177,9 @@ class CBSSolver2(object):
         self.num_of_expanded += 1
         return node
 
-    def find_solution(self, disjoint=False):
-        """ Finds paths for all agents from their start locations to their goal locations
-
-        disjoint    - use disjoint splitting or not
+    def find_solution(self):
+        """ 
+        Finds paths for all agents from their start locations to their goal locations
         """
         self.start_time = timer.time()
 
@@ -197,7 +192,8 @@ class CBSSolver2(object):
             'cost': 0,
             'constraints': [],
             'paths': [],
-            'collisions': []
+            'collisions': [],
+            'time_window': (None, None)
         }
         for i in range(self.num_of_agents):  # Find initial path for each agent
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
@@ -207,12 +203,13 @@ class CBSSolver2(object):
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])
-        root['collisions'] = detect_collisions(root['paths'])
+        # init time window
+        root['time_window'] = (0, window_size)
+        root['collisions'] = detect_collisions(root['paths'], root['time_window'])
         self.push_node(root)
         # Task 3.1: Testing
         if DEBUG:
             print("3.1", root['collisions'])
-
         # Task 3.2: Testing
         if DEBUG:
             for collision in root['collisions']:
@@ -229,54 +226,53 @@ class CBSSolver2(object):
 
         while self.open_list and timer.time() - self.start_time < self.max_time:
             p = self.pop_node()
-            # if there are no collisions, we found a solution
+            # CBS: if there are no collisions, we found a solution
+            # WCBS: if there are no collisions and all agents have reached their goals, we found a solution
             if not p['collisions']:
-                self.print_results(p)
-                return p['paths']
-            # we choose a collision and turn it into constraints
-            # collision = random.choice(p['collisions'])
-            # collision = p['collisions'][0]
+                if self.all_agents_reached_goals(p['paths'], p['time_window'][1]):
+                    # find a solution
+                    self.print_results(p)
+                    return p['paths']
+                else:
+                    # 当前时间窗无冲突，滑动时间窗
+                    p['time_window'] = shift_window(p['time_window'], window_size, window_size)
+                    p['collisions'] = detect_collisions(p['paths'], p['time_window'])
+                    p['cost'] = get_sum_of_cost(p['paths'])
+                    # 将滑动时间窗后的节点加入open_list
+                    self.push_node(p)
+                    continue
+            # 选择第一个冲突
             collision = min(p['collisions'], key=lambda x: x['timestep'])
-            # 4.2 Adjusting the High-Level Search
-            constraints = standard_splitting(collision)
-            # HERE
-            # st()
+            constraints = standard_splitting(collision, p['time_window'])
             for c in constraints:
-                skip_node = False
                 q = {'cost': 0,
                      'constraints': [*p['constraints'], c],  # all constraints in p plus c
                      'paths': p['paths'].copy(),
-                     'collisions': []
+                     'collisions': [],
+                     'time_window': p['time_window']
                      }
                 agent = c['agent']
                 path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
                               agent, q['constraints'])
+                new_time_begin = longest_common_prefix(path, q['paths'][agent])
                 if path:
                     q['paths'][agent] = path
-                    if c['positive']:
-                        rebuild_agents = paths_violate_constraint(c, q['paths'])
-                        for r_agent in rebuild_agents:
-                            c_new = c.copy()
-                            c_new['agent'] = r_agent
-                            c_new['positive'] = False
-                            q['constraints'].append(c_new)
-                            r_path = a_star(self.my_map, self.starts[r_agent], self.goals[r_agent],
-                                            self.heuristics[r_agent], r_agent,q['constraints'])
-                            if r_path is None:
-                                skip_node = True
-                                break # at least one agents has none solution
-                            else:
-                                q['paths'][r_agent] = r_path
-                    if(not skip_node):
-                        q['collisions'] = detect_collisions(q['paths'])
-                        q['cost'] = get_sum_of_cost(q['paths'])
-                        self.push_node(q)
+                    q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 1)
+                    q['collisions'] = detect_collisions(q['paths'], q['time_window'])
+                    q['cost'] = get_sum_of_cost(q['paths'])
+                    self.push_node(q)
                 else:
                     raise BaseException('No solutions')
         raise BaseException('Time limit exceeded')
+    
+    def all_agents_reached_goals(self, paths, t):
+        """ Check if all agents have reached their goals """
+        for i in range(self.num_of_agents):
+            if get_location(paths[i], t) != self.goals[i]:  # Check if the last position of agent i is the goal
+                return False
+        return True
 
     def print_results(self, node):
-        # pass
         # if DEBUG:
             print("\n Found a solution! \n")
             CPU_time = timer.time() - self.start_time
