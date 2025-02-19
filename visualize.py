@@ -3,8 +3,9 @@ from matplotlib.patches import Circle, Rectangle
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
+import os
 
-Colors = ['green', 'blue', 'orange','yellow']
+Colors = ['green', 'blue', 'orange', 'yellow', 'purple', 'pink', 'gray', 'brown']
 
 
 class Animation:
@@ -70,15 +71,44 @@ class Animation:
         self.animation = animation.FuncAnimation(self.fig, self.animate_func,
                                                  init_func=self.init_func,
                                                  frames=int(self.T + 1) * 10,
-                                                 interval=50,#speed
+                                                 interval=30,#speed
                                                  blit=True)
+        
+    def save_static_images(self, output_dir="./output"):
+        """
+        输出一组静态图片，每个时间点一张图片，保存到指定目录。
+        :param output_dir: 图片保存的目录，默认为 "./output"
+        """
+        # 创建输出目录（如果不存在）
+        os.makedirs(output_dir, exist_ok=True)
 
-    def save(self, file_name, speed):
+        # 遍历每个时间点
+        for t in range(1, int(self.T + 2)):
+            # 初始化画布
+            self.init_func()
+
+            # 更新智能体的位置
+            for k in range(len(self.paths)):
+                pos = self.get_state(t, self.paths[k])
+                self.agents[k].center = (pos[0], pos[1])
+                self.agent_names[k].set_position((pos[0], pos[1] + 0.5))
+
+            # 保存图片
+            file_name = os.path.join(output_dir, output_dir.rsplit('/', 1)[-1] + f"_{t:03d}.pdf")
+            self.fig.savefig(file_name, dpi=200, bbox_inches="tight", pad_inches=0)
+
+            # # 清空画布
+            # self.ax.clear()
+
+        print(f"图片已保存到 {output_dir} 目录中")
+
+    def save_video(self, file_name, speed):
         self.animation.save(
             file_name,
             fps=10 * speed,
             dpi=200,
-            savefig_kwargs={"pad_inches": 0, "bbox_inches": "tight"})
+            # savefig_kwargs={"pad_inches": 0, "bbox_inches": "tight"})
+            savefig_kwargs={"pad_inches": 0})
 
     @staticmethod
     def show():
