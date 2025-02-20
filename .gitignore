@@ -127,3 +127,5 @@ dmypy.json
 **/.idea/**
 
 benchmark/test/
+output/
+output.mp4

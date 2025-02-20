@@ -63,7 +63,7 @@ class Animation:
             self.agents[i].original_face_color = Colors[i % len(Colors)]
             self.patches.append(self.agents[i])
             self.T = max(self.T, len(paths[i]) - 1)
-            self.agent_names[i] = self.ax.text(starts[i][0], starts[i][1] + 0.25, name)
+            self.agent_names[i] = self.ax.text(starts[i][0], starts[i][1], name)
             self.agent_names[i].set_horizontalalignment('center')
             self.agent_names[i].set_verticalalignment('center')
             self.artists.append(self.agent_names[i])
@@ -91,11 +91,17 @@ class Animation:
             for k in range(len(self.paths)):
                 pos = self.get_state(t, self.paths[k])
                 self.agents[k].center = (pos[0], pos[1])
-                self.agent_names[k].set_position((pos[0], pos[1] + 0.5))
+                self.agent_names[k].set_position((pos[0], pos[1] + 0.38))
+                
+            self.ax.set_frame_on(False)  # 去除边框
+            self.ax.set_xticks([])       # 去除x轴刻度
+            self.ax.set_yticks([])       # 去除y轴刻度
+            self.ax.set_xticklabels([])  # 去除x轴标签
+            self.ax.set_yticklabels([])  # 去除y轴标签
 
             # 保存图片
-            file_name = os.path.join(output_dir, output_dir.rsplit('/', 1)[-1] + f"_{t:03d}.pdf")
-            self.fig.savefig(file_name, dpi=200, bbox_inches="tight", pad_inches=0)
+            file_name = os.path.join(output_dir, output_dir.rsplit('/', 1)[-1] + f"_{t-1:03d}.pdf")
+            self.fig.savefig(file_name, dpi=200, bbox_inches="tight", pad_inches=0.1)
 
             # # 清空画布
             # self.ax.clear()

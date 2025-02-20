@@ -41,7 +41,7 @@
             "program": "${workspaceFolder}/run_experiments.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance", "instances/exp_hhr_1.txt",
+                "--instance", "instances/test_4.txt",
                 "--solver", "WCBS"
             ],
             "python": "/home/haharen/miniconda3/envs/mapf/bin/python",

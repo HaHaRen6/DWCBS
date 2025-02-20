@@ -7,18 +7,18 @@ from ipdb import set_trace as st
 DEBUG = True
 window_size = 5
 
-def normalize_paths(pathA, pathB):
+def normalize_paths(pathA, pathB, time_window_size):
     """
-    扩展短的路径，使得两个路径长度相等
+    扩展短的路径，使得两个路径长度相等，长度不超过时间窗长度
     """
-    path1 = pathA.copy()
-    path2 = pathB.copy()
+    path1 = pathA.copy()[:time_window_size + 1]
+    path2 = pathB.copy()[:time_window_size + 1]
     shortest, pad = (path1, len(path2) - len(path1)) if len(path1) < len(path2) else (path2, len(path1) - len(path2))
     for _ in range(pad):
         shortest.append(shortest[-1])
     return path1, path2
 
-def detect_collision(pathA, pathB, time_window=(None, None)):
+def detect_collision(pathA, pathB, time_window):
     ##############################
     # Task 3.1: Return the first collision that occurs between two robot paths (or None if there is no collision)
     #           There are two types of collisions: vertex collision and edge collision.
@@ -28,20 +28,24 @@ def detect_collision(pathA, pathB, time_window=(None, None)):
     # 
     # 用于检测一个智能体是否与另一个智能体发生碰撞，即使其中一方已达成目标。
     
-    path1, path2 = normalize_paths(pathA, pathB)
-    length = len(path1)
     (time_start, time_end) = time_window
-    time_start = time_start if time_start is not None else 0
-    time_end = time_end if time_end is not None else length
-    for t in range(time_start, time_end):
+    time_window_size = time_end - time_start + 1
+    path1, path2 = normalize_paths(pathA, pathB, time_end)
+    # print(time_window)
+    # print(path1)
+    # print(path2)
+    # print()
+    length = len(path1)
+    time_end = min(time_end, length + time_start)
+    for t in range(time_start, time_end + 1):
         # check for vertex collision
         pos1 = get_location(path1, t)
         pos2 = get_location(path2, t)
         if pos1 == pos2:
             # return the vertex and the timestep causing the collision
             return [pos1], t, 'vertex'
-        # check for edge collision (edge collision 不会发生在最后一步，为啥...)
-        if t < length - 1:
+        # check for edge collision
+        if t < time_end:
             next_pos1 = get_location(path1, t + 1)
             next_pos2 = get_location(path2, t + 1)
             if pos1 == next_pos2 and pos2 == next_pos1:
@@ -133,7 +137,7 @@ def longest_common_prefix(list1, list2):
     return prefix_len
 
 def shift_window(time_window, shift1, shift2):
-    return (time_window[0] + shift1, time_window[1] + shift2)
+    return (time_window[0] + shift1 - 1, time_window[1] + shift2 - 1)
 
 class WCBSSolver(object):
     """The high-level search of CBS."""
@@ -204,7 +208,7 @@ class WCBSSolver(object):
 
         root['cost'] = get_sum_of_cost(root['paths'])
         # init time window
-        root['time_window'] = (0, window_size)
+        root['time_window'] = (0, window_size - 1) # 时间窗为左闭右闭区间
         root['collisions'] = detect_collisions(root['paths'], root['time_window'])
         self.push_node(root)
         # Task 3.1: Testing
@@ -213,7 +217,7 @@ class WCBSSolver(object):
         # Task 3.2: Testing
         if DEBUG:
             for collision in root['collisions']:
-                print("3.2", standard_splitting(collision))
+                print("3.2", standard_splitting(collision, root['time_window']))
 
         ##############################
         # Task 3.3: High-Level Search
@@ -226,6 +230,7 @@ class WCBSSolver(object):
 
         while self.open_list and timer.time() - self.start_time < self.max_time:
             p = self.pop_node()
+            # print(p)
             # CBS: if there are no collisions, we found a solution
             # WCBS: if there are no collisions and all agents have reached their goals, we found a solution
             if not p['collisions']:
@@ -257,12 +262,12 @@ class WCBSSolver(object):
                 new_time_begin = longest_common_prefix(path, q['paths'][agent])
                 if path:
                     q['paths'][agent] = path
-                    q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 1)
+                    q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 2)
                     q['collisions'] = detect_collisions(q['paths'], q['time_window'])
                     q['cost'] = get_sum_of_cost(q['paths'])
                     self.push_node(q)
-                else:
-                    raise BaseException('No solutions')
+                # else:
+                #     raise BaseException('No solutions')
         raise BaseException('Time limit exceeded')
     
     def all_agents_reached_goals(self, paths, t):
