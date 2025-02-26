@@ -5,7 +5,8 @@ import numpy as np
 from matplotlib import animation
 import os
 
-Colors = ['green', 'blue', 'orange', 'yellow', 'purple', 'pink', 'gray', 'brown']
+# Colors = ['green', 'blue', 'orange', 'yellow', 'purple', 'pink', 'gray', 'brown']
+Colors = ['green', 'blue', 'orange', 'yellow', (153/255, 50/255, 204/255), 'pink', 'gray', (160/255, 82/255, 45/255)]
 
 
 class Animation:
@@ -58,7 +59,7 @@ class Animation:
                                           edgecolor='black', alpha=0.5))
         for i in range(len(self.paths)):
             name = str(i)
-            self.agents[i] = Circle((starts[i][0], starts[i][1]), 0.3, facecolor=Colors[i % len(Colors)],
+            self.agents[i] = Circle((starts[i][0], starts[i][1]), 0.25, facecolor=Colors[i % len(Colors)],
                                     edgecolor='black')
             self.agents[i].original_face_color = Colors[i % len(Colors)]
             self.patches.append(self.agents[i])
@@ -85,7 +86,7 @@ class Animation:
         # 遍历每个时间点
         for t in range(1, int(self.T + 2)):
             # 初始化画布
-            self.init_func()
+            # self.init_func()
 
             # 更新智能体的位置
             for k in range(len(self.paths)):

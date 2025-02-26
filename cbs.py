@@ -4,8 +4,8 @@ import heapq
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 from ipdb import set_trace as st 
 
-DEBUG = True
-
+DEBUG = False
+time_step_count = 0
 
 def normalize_paths(pathA, pathB):
     """
@@ -21,6 +21,7 @@ def normalize_paths(pathA, pathB):
     return path1, path2
 
 def detect_collision(pathA, pathB):
+    global time_step_count
     ##############################
     # Task 3.1: Return the first collision that occurs between two robot paths (or None if there is no collision)
     #           There are two types of collisions: vertex collision and edge collision.
@@ -30,6 +31,7 @@ def detect_collision(pathA, pathB):
     # this function detects if an agent collides with another even after one of the two reached the goal
     path1, path2 = normalize_paths(pathA, pathB)
     length = len(path1)
+    time_step_count += length
     for t in range(length):
         # check for vertex collision
         pos1 = get_location(path1, t)
@@ -308,11 +310,12 @@ class CBSSolver(object):
         raise BaseException('Time limit exceeded')
 
     def print_results(self, node):
-        # pass
-        # if DEBUG:
-            print("\n Found a solution! \n")
-            CPU_time = timer.time() - self.start_time
-            print("CPU time (s):    {:.5f}".format(CPU_time))
-            print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
-            print("Expanded nodes:  {}".format(self.num_of_expanded))
-            print("Generated nodes: {}".format(self.num_of_generated))
+        print("\nFound a solution!")
+        CPU_time = timer.time() - self.start_time
+        for i in range(len(node["paths"])):
+            print("agent", i, ": ", node["paths"][i])
+        print("\nCPU time (s):     {:.5f}".format(CPU_time))
+        print("Sum of costs:     {}".format(get_sum_of_cost(node['paths'])))
+        print("Expanded nodes:   {}".format(self.num_of_expanded))
+        print("Generated nodes:  {}".format(self.num_of_generated))
+        print("Detect time steps {}".format(time_step_count))

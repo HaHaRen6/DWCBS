@@ -4,8 +4,9 @@ import heapq
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 from ipdb import set_trace as st 
 
-DEBUG = True
-window_size = 5
+DEBUG = False
+window_size = 7
+time_step_count = 0
 
 def normalize_paths(pathA, pathB, time_window_size):
     """
@@ -19,6 +20,7 @@ def normalize_paths(pathA, pathB, time_window_size):
     return path1, path2
 
 def detect_collision(pathA, pathB, time_window):
+    global time_step_count
     ##############################
     # Task 3.1: Return the first collision that occurs between two robot paths (or None if there is no collision)
     #           There are two types of collisions: vertex collision and edge collision.
@@ -27,9 +29,8 @@ def detect_collision(pathA, pathB, time_window):
     #           You should use "get_location(path, t)" to get the location of a robot at time t.
     # 
     # 用于检测一个智能体是否与另一个智能体发生碰撞，即使其中一方已达成目标。
-    
     (time_start, time_end) = time_window
-    time_window_size = time_end - time_start + 1
+    # time_window_size = time_end - time_start + 1
     path1, path2 = normalize_paths(pathA, pathB, time_end)
     # print(time_window)
     # print(path1)
@@ -37,6 +38,7 @@ def detect_collision(pathA, pathB, time_window):
     # print()
     length = len(path1)
     time_end = min(time_end, length + time_start)
+    time_step_count += time_end - time_start + 1
     for t in range(time_start, time_end + 1):
         # check for vertex collision
         pos1 = get_location(path1, t)
@@ -278,10 +280,18 @@ class WCBSSolver(object):
         return True
 
     def print_results(self, node):
-        # if DEBUG:
-            print("\n Found a solution! \n")
-            CPU_time = timer.time() - self.start_time
-            print("CPU time (s):    {:.5f}".format(CPU_time))
-            print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
-            print("Expanded nodes:  {}".format(self.num_of_expanded))
-            print("Generated nodes: {}".format(self.num_of_generated))
+        print("\nFound a solution!")
+        CPU_time = timer.time() - self.start_time
+        max_len = 0
+        for i in range(len(node["paths"])):
+            print("agent", i, ": ", node["paths"][i])
+            max_len = max(max_len, len(node["paths"][i]))
+        print("\nCPU time (s):     {:.5f}".format(CPU_time))
+        print("Sum of costs:     {}".format(get_sum_of_cost(node['paths'])))
+        print("Expanded nodes:   {}".format(self.num_of_expanded))
+        print("Generated nodes:  {}".format(self.num_of_generated))
+        print("Window size:      {}".format(window_size))
+        print("Detect time steps {}".format(time_step_count))
+        # print(max_len)
+        collisions = detect_collisions(node['paths'], (0, max_len - 1))
+        print("No collisions" if collisions == [] else "COLLISION!!!" + collisions)
