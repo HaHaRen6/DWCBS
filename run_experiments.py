@@ -188,6 +188,6 @@ if __name__ == '__main__':
                 animation = Animation(my_map, starts, goals, paths)
                 # animation.save_video("output1.gif", 1.0)
                 # animation.save_static_images("./output/" + args.instance.rsplit('/', 1)[-1].split('.', 1)[0])
-                animation.show()
+                # animation.show()
     print("***Done***")
     result_file.close()

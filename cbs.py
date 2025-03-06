@@ -31,13 +31,13 @@ def detect_collision(pathA, pathB):
     # this function detects if an agent collides with another even after one of the two reached the goal
     path1, path2 = normalize_paths(pathA, pathB)
     length = len(path1)
-    time_step_count += length
     for t in range(length):
         # check for vertex collision
         pos1 = get_location(path1, t)
         pos2 = get_location(path2, t)
         if pos1 == pos2:
             # we return the vertex and the timestep causing the collision
+            time_step_count += t + 1
             return [pos1], t, 'vertex'
         # check for edge collision (not if we are in the last timestep)
         if t < length - 1:
@@ -45,7 +45,9 @@ def detect_collision(pathA, pathB):
             next_pos2 = get_location(path2, t + 1)
             if pos1 == next_pos2 and pos2 == next_pos1:
                 # we return the edge and timestep causing the collision
+                time_step_count += t + 1
                 return [pos1, next_pos1], t + 1, 'edge'
+    time_step_count += length
     return None
 
 
@@ -206,12 +208,14 @@ class CBSSolver(object):
         heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
         if DEBUG:
             print("Generate node {}".format(self.num_of_generated))
+            # print(node)
         self.num_of_generated += 1
 
     def pop_node(self):
         _, _, id, node = heapq.heappop(self.open_list)
         if DEBUG:
             print("Expand node {}".format(id))
+            # print(node)
         self.num_of_expanded += 1
         return node
 
