@@ -5,7 +5,7 @@ from single_agent_planner import compute_heuristics, a_star, get_location, get_s
 from ipdb import set_trace as st 
 
 DEBUG = False
-window_size = 1000
+# window_size = 3
 time_step_count = 0
 
 def normalize_paths(pathA, pathB, time_window_size):
@@ -37,7 +37,6 @@ def detect_collision(pathA, pathB, time_window):
     # print(path2)
     # print()
     length = len(path1)
-    time_start = 0
     time_end = min(time_end, length + time_start - 1)
     for t in range(time_start, time_end + 1):
         # check for vertex collision
@@ -141,10 +140,13 @@ def longest_common_prefix(list1, list2):
             break  # 遇到不同元素时终止循环
     return prefix_len
 
-def shift_window(time_window, shift1, shift2):
-    return (time_window[0] + shift1 - 1, time_window[1] + shift2 - 1)
+def shift_window(time_window, size):
+    return (time_window[1], time_window[1] + size - 1)
 
-class WCBSSolver(object):
+def adjust_window(new_begin, size):
+    return (new_begin, new_begin + size - 1)
+
+class DWCBSSolver(object):
     """The high-level search of CBS."""
 
     def __init__(self, my_map, starts, goals, max_time=None):
@@ -167,6 +169,7 @@ class WCBSSolver(object):
 
         self.open_list = []
         self.cont = 0
+        self.window_size = 3
 
         # compute heuristics for the low-level search
         self.heuristics = []
@@ -215,7 +218,7 @@ class WCBSSolver(object):
 
         root['cost'] = get_sum_of_cost(root['paths'])
         # init time window
-        root['time_window'] = (0, window_size - 1) # 时间窗为左闭右闭区间
+        root['time_window'] = (0, self.window_size - 1) # 时间窗为左闭右闭区间
         root['collisions'] = detect_collisions(root['paths'], root['time_window'])
         self.push_node(root)
         # Task 3.1: Testing
@@ -247,8 +250,16 @@ class WCBSSolver(object):
                     return p['paths']
                 else:
                     # 当前时间窗无冲突，滑动时间窗
-                    p['time_window'] = shift_window(p['time_window'], window_size, window_size)
+                    # p['time_window'] = shift_window(p['time_window'], window_size, window_size)
+                    beg = p['time_window']
+                    p['time_window'] = shift_window(p['time_window'], self.window_size)
                     p['collisions'] = detect_collisions(p['paths'], p['time_window'])
+                    if p['collisions'] != [] and self.window_size >= 3:
+                        self.window_size = 3
+                        p['time_window'] = shift_window(beg, self.window_size)
+                    elif p['collisions'] == []:
+                        self.window_size += 1
+                        p['time_window'] = shift_window(beg, self.window_size)
                     p['cost'] = get_sum_of_cost(p['paths'])
                     # 将滑动时间窗后的节点加入open_list
                     self.push_node(p)
@@ -269,8 +280,15 @@ class WCBSSolver(object):
                 new_time_begin = longest_common_prefix(path, q['paths'][agent])
                 if path:
                     q['paths'][agent] = path
-                    q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 2)
+                    # q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 2)
+                    q['time_window'] = adjust_window(new_time_begin - 1, self.window_size)
                     q['collisions'] = detect_collisions(q['paths'], q['time_window'])
+                    if q['collisions'] != [] and self.window_size >= 3:
+                        self.window_size = 3
+                        q['time_window'] = adjust_window(new_time_begin - 1, self.window_size)
+                    elif q['collisions'] == []:
+                        self.window_size += 1
+                        q['time_window'] = adjust_window(new_time_begin - 1, self.window_size)
                     q['cost'] = get_sum_of_cost(q['paths'])
                     self.push_node(q)
                 # else:
@@ -295,7 +313,7 @@ class WCBSSolver(object):
         print("Sum of costs:     {}".format(get_sum_of_cost(node['paths'])))
         print("Expanded nodes:   {}".format(self.num_of_expanded))
         print("Generated nodes:  {}".format(self.num_of_generated))
-        print("Window size:      {}".format(window_size))
+        print("Window size:      {}".format(self.window_size))
         print("Detect time steps {}".format(time_step_count))
         # print(max_len)
         collisions = detect_collisions(node['paths'], (0, max_len - 1))

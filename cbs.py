@@ -289,26 +289,39 @@ class CBSSolver(object):
                 agent = c['agent']
                 path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
                               agent, q['constraints'])
+                
+                # minpath = min([len(p) for p in q['paths']])
+                # print(minpath)
+                # flag = 0
+                # for ii in range(minpath-2):
+                #     if all(q['paths'][jj][ii] == q['paths'][jj][ii+1] for jj in range(self.num_of_agents)):
+                #         print(q['paths'])
+                #         flag = 1
+                #         break
+                # if flag == 1:
+                #     continue
+
                 if path:
                     q['paths'][agent] = path
-                    if c['positive']:
-                        rebuild_agents = paths_violate_constraint(c, q['paths'])
-                        for r_agent in rebuild_agents:
-                            c_new = c.copy()
-                            c_new['agent'] = r_agent
-                            c_new['positive'] = False
-                            q['constraints'].append(c_new)
-                            r_path = a_star(self.my_map, self.starts[r_agent], self.goals[r_agent],
-                                            self.heuristics[r_agent], r_agent,q['constraints'])
-                            if r_path is None:
-                                skip_node = True
-                                break # at least one agents has none solution
-                            else:
-                                q['paths'][r_agent] = r_path
-                    if(not skip_node):
-                        q['collisions'] = detect_collisions(q['paths'])
-                        q['cost'] = get_sum_of_cost(q['paths'])
-                        self.push_node(q)
+                    # if c['positive']:
+                    #     rebuild_agents = paths_violate_constraint(c, q['paths'])
+                    #     for r_agent in rebuild_agents:
+                    #         c_new = c.copy()
+                    #         c_new['agent'] = r_agent
+                    #         c_new['positive'] = False
+                    #         q['constraints'].append(c_new)
+                    #         r_path = a_star(self.my_map, self.starts[r_agent], self.goals[r_agent],
+                    #                         self.heuristics[r_agent], r_agent,q['constraints'])
+                    #         if r_path is None:
+                    #             skip_node = True
+                    #             break # at least one agents has none solution
+                    #         else:
+                    #             q['paths'][r_agent] = r_path
+
+                    # if(not skip_node):
+                    q['collisions'] = detect_collisions(q['paths'])
+                    q['cost'] = get_sum_of_cost(q['paths'])
+                    self.push_node(q)
                 # else:
                 #     raise BaseException('No solutions')
         raise BaseException('Time limit exceeded')

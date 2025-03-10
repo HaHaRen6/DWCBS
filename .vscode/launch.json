@@ -49,5 +49,20 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         }
+        {
+            "name": "Run WCBS-lab",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_experiments.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance", "instances/test_47.txt",
+                "--solver", "WCBS"
+            ],
+            "python": "D:/software/miniconda/envs/mapf/python.exe",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
     ]
 }

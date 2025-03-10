@@ -4,6 +4,7 @@ import glob
 from pathlib import Path
 from cbs import CBSSolver
 from wcbs import WCBSSolver
+from dwcbs import DWCBSSolver
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from random_instance import random_map, save_map, correct_random_map
@@ -93,7 +94,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    result_file = open("results.csv", "w", buffering=1)
+    result_file = open("results.csv", "a", buffering=1)
     if args.benchmark:
         # Benchmark mode
         if args.benchmark == "random":
@@ -169,6 +170,10 @@ if __name__ == '__main__':
                 print("***Run WCBS***")
                 cbs = WCBSSolver(my_map, starts, goals)
                 paths = cbs.find_solution()
+            elif args.solver == "DWCBS":
+                print("***Run DWCBS***")
+                cbs = DWCBSSolver(my_map, starts, goals)
+                paths = cbs.find_solution() 
             elif args.solver == "Independent":
                 print("***Run Independent***")
                 solver = IndependentSolver(my_map, starts, goals)

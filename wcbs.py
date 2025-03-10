@@ -5,7 +5,7 @@ from single_agent_planner import compute_heuristics, a_star, get_location, get_s
 from ipdb import set_trace as st 
 
 DEBUG = False
-window_size = 7
+window_size = 4
 time_step_count = 0
 
 def normalize_paths(pathA, pathB, time_window_size):
@@ -140,8 +140,11 @@ def longest_common_prefix(list1, list2):
             break  # 遇到不同元素时终止循环
     return prefix_len
 
-def shift_window(time_window, shift1, shift2):
-    return (time_window[0] + shift1 - 1, time_window[1] + shift2 - 1)
+def shift_window(time_window, size):
+    return (time_window[1], time_window[1] + size - 1)
+
+def adjust_window(new_begin, size):
+    return (new_begin, new_begin + size - 1)
 
 class WCBSSolver(object):
     """The high-level search of CBS."""
@@ -246,7 +249,8 @@ class WCBSSolver(object):
                     return p['paths']
                 else:
                     # 当前时间窗无冲突，滑动时间窗
-                    p['time_window'] = shift_window(p['time_window'], window_size, window_size)
+                    # p['time_window'] = shift_window(p['time_window'], window_size, window_size)
+                    p['time_window'] = shift_window(p['time_window'], window_size)
                     p['collisions'] = detect_collisions(p['paths'], p['time_window'])
                     p['cost'] = get_sum_of_cost(p['paths'])
                     # 将滑动时间窗后的节点加入open_list
@@ -268,7 +272,8 @@ class WCBSSolver(object):
                 new_time_begin = longest_common_prefix(path, q['paths'][agent])
                 if path:
                     q['paths'][agent] = path
-                    q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 2)
+                    # q['time_window'] = (new_time_begin - 1, new_time_begin + window_size - 2)
+                    q['time_window'] = adjust_window(new_time_begin - 1, window_size)
                     q['collisions'] = detect_collisions(q['paths'], q['time_window'])
                     q['cost'] = get_sum_of_cost(q['paths'])
                     self.push_node(q)
