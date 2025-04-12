@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+dataset/
+backup/
+benchmark/
+
+!backup/obstacles-final
+!backup/obstacles-final/**
+!backup/obstacle_average_conflicts_sort/
+
 # C extensions
 *.so
 

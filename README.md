@@ -1,27 +1,33 @@
 # Multi-Agent Path Finding (MAPF)
-The MAPF (Multi-Agent Path Finding) is the problem of computing collision-free paths for a team of agents from their current locations to a given destination. In this repo you can find the solution of the assignment given by [Sven Koenig](http://idm-lab.org/project-p/project.html) that is composed of 5 tasks. I used the repository of [jzagoli](https://github.com/zagoli/MultiAgentPathFinding) that has already implemented the tasks 1 to 3 included. Try the solution executing the following command (after installing requirements.txt):
+本项目基于南加州大学（University of Southern California）的课程项目 [Multi-Agent Path Finding](https://idm-lab.org/project-p/project.html)
 
-```bash
-python run_experiments.py --disjoint --random --solver CBS
+## Run experiments
+
+### CBS
+
+```shell
+python run_experiments.py --solver CBS --instance <map_file>
 ```
+
+### WCBS
+
+```shell
+python run_experiments.py --solver WCBS --instance <map_file> --windowsize <window_size,default=3>
+```
+
+### DWCBS
+
+```shell
+python run_experiments.py --solver DWCBS --instance <map_file> --train <train_flag>
+```
+
+
 <p align="center">
     <img style="width:400px" src="img/output.gif"/>
 </p>
 
-### Task 4
-The target of this task is to implement the CBS (Conflict-Based Search) with Disjoint Splitting, that means (in a few words)
-to add the support of positive contraints to the CBS algorithm. The CBS algorithm use the negative contraints to
-indicate conflicts between agents, the idea of the positive contraints is to force agents to be in a certain position
-in the specified time.
 
-### Task 5
-In this task I will benchmark the performance of MAPF solvers, I chose to make a custom benchmark that is
-based on some random maps generated at runtime.
 
-In my solution there are the following steps:
-- Generate a random map
-- Solve the map with the MAPF solver (CBS and CBS+DS)
-- Increase the number of agents and repeat the process
 
 #### 1 - Benchmark random
 The benchmark is based on random maps generated at runtime with a number of agents that varies from 4 to 18 with a step of 2. For each number of agents the benchmark generate 25 maps and solve them with the MAPF solver. The time limit is set to 2 minutes and every cell of the map has the probability of 5% of being occupied.

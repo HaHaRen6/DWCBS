@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import argparse
 
-ALGORITMS = ['cbs', 'cbs_disjoint']
+ALGORITMS = ['cbs', 'wcbs']
 THEME = 'darkgrid'
 
 def plot_time_area(data, time_limit):
@@ -32,12 +32,12 @@ def plot_time_area(data, time_limit):
         for i in range(len(y_axis[alg])):
             std_of_mean[alg].append(np.std(y_axis[alg][i], ddof=1) / np.sqrt(np.size(y_axis[alg][i])))
     cbs = np.array([np.mean(x) for x in y_axis[0]])
-    cbs_disjoint = np.array([np.mean(x) for x in y_axis[1]])
+    wcbs = np.array([np.mean(x) for x in y_axis[1]])
     data = pd.DataFrame(
         data={
             'agents': x_axis,
             'cbs': cbs,
-            'cbs_disjoint': cbs_disjoint
+            'wcbs': wcbs
         }
     )
     plt = sns.lineplot(data=data.set_index('agents'), linewidth=2.5)
@@ -49,7 +49,7 @@ def plot_time_area(data, time_limit):
     plt.plot(x_axis, upper, color='tab:blue', alpha=0.2)
     plt.fill_between(x_axis, lower, upper, color='tab:blue', alpha=0.2)
     # CBS disjoint area
-    lower = cbs_disjoint - std_of_mean[1]; upper = cbs_disjoint + std_of_mean[1]
+    lower = wcbs - std_of_mean[1]; upper = wcbs + std_of_mean[1]
     plt.plot(x_axis, lower, color='tab:orange', alpha=0.2)
     plt.plot(x_axis, upper, color='tab:orange', alpha=0.2)
     plt.fill_between(x_axis, lower, upper, color='tab:orange', alpha=0.2)
@@ -70,14 +70,14 @@ def plot_success_rate(data, time_limit):
         for agents in data:
             success = 0
             for sample in data[agents][alg]['cpu_time']:
-                if(sample != -1):
+                if(sample != 120):
                     success += 1
             d[alg].append(success)
     data = pd.DataFrame(
         data={
             'agents': x_axis,
             'cbs': d['cbs'],
-            'cbs_disjoint': d['cbs_disjoint']
+            'wcbs': d['wcbs']
         }
     )
     plt = sns.lineplot(data=data.set_index('agents'), linewidth=2.5)
@@ -105,7 +105,7 @@ def plot_expanded_nodes(data, default_nodes= 1000):
         data={
             'agents': x_axis,
             'cbs': y_axis[0],
-            'cbs_disjoint': y_axis[1]
+            'wcbs': y_axis[1]
         }
     )
     plt = sns.lineplot(data=data.set_index('agents'), linewidth=2.5)
@@ -113,6 +113,33 @@ def plot_expanded_nodes(data, default_nodes= 1000):
     plt.axes.set_xticks(np.arange(start, finish, 2.0))
     plt.set(title='Mean of expanded nodes')
 
+def plot_time_steps(data, default_steps= 1000):
+    """
+    Plot cpu time of the be
+    """
+    keys = list(data.keys())
+    start,finish = int(keys[0]), int(keys[-1])+2
+    sns.set_theme(style=THEME)
+    x_axis = [i for i in range(start,finish,2)]
+    y_axis = []
+    for alg in ALGORITMS:
+        d = []
+        for i in range(start,finish,2):
+            sub = data[str(i)][alg]['time_steps']
+            sub = [default_steps if x == -1 else x for x in sub]
+            d.append(np.mean(sub))
+        y_axis.append(d)
+    data = pd.DataFrame(
+        data={
+            'agents': x_axis,
+            'cbs': y_axis[0],
+            'wcbs': y_axis[1]
+        }
+    )
+    plt = sns.lineplot(data=data.set_index('agents'), linewidth=2.5)
+    plt.set(xlabel='Number of agents', ylabel='time_steps')
+    plt.axes.set_xticks(np.arange(start, finish, 2.0))
+    plt.set(title='Mean of time_steps')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Runs various MAPF algorithms')
@@ -127,7 +154,9 @@ if __name__ == "__main__":
         plt.show()
         plot_time_area(data, 60*2)
         plt.show()
-        plot_expanded_nodes(data, 500)
+        # plot_expanded_nodes(data, 500)
+        # plt.show()
+        plot_time_steps(data, 500)
         plt.show()
     if args.plot == 'success':
         # plot based of one map with different instances
